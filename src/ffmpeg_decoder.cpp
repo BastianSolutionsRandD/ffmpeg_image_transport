@@ -208,6 +208,7 @@ namespace ffmpeg_image_transport {
     av_new_packet(&packet, msg->data.size()); // will add some padding!
     memcpy(packet.data, &msg->data[0], msg->data.size());
     packet.pts = msg->pts;
+    packet.flags = msg->flags;
     packet.dts = packet.pts;
     ptsToStamp_[packet.pts] = msg->header.stamp;
     int ret = avcodec_send_packet(ctx, &packet);
@@ -237,7 +238,8 @@ namespace ffmpeg_image_transport {
           SWS_FAST_BILINEAR, NULL, NULL, NULL);
         if (!swsContext_) {
           ROS_ERROR("cannot allocate sws context!!!!");
-          ros::shutdown();
+          av_packet_unref(&packet);
+	  ros::shutdown();
           return (false);
         }
       }
